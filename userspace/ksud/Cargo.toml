@@ -42,7 +42,6 @@ sha1 = "0.10"
 tempfile = "3.14"
 chrono = "0.4"
 regex-lite = "0.1"
-fs4 = "0.12"
 
 [target.'cfg(any(target_os = "android", target_os = "linux"))'.dependencies]
 rustix = { git = "https://github.com/Kernel-SU/rustix.git", branch = "main", features = [

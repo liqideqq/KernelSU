@@ -27,11 +27,11 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.Fence
-import androidx.compose.material.icons.filled.FolderDelete
 import androidx.compose.material.icons.filled.RemoveModerator
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +45,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,6 +90,11 @@ import me.weishu.kernelsu.ui.component.rememberCustomDialog
 import me.weishu.kernelsu.ui.component.rememberLoadingDialog
 import me.weishu.kernelsu.ui.util.LocalSnackbarHost
 import me.weishu.kernelsu.ui.util.getBugreportFile
+import me.weishu.kernelsu.ui.util.getSuSFS
+import me.weishu.kernelsu.ui.util.getSuSFSFeatures
+import me.weishu.kernelsu.ui.util.susfsSUS_SU_0
+import me.weishu.kernelsu.ui.util.susfsSUS_SU_2
+import me.weishu.kernelsu.ui.util.susfsSUS_SU_Mode
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -161,30 +167,13 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 mutableStateOf(Natives.isDefaultUmountModules())
             }
             SwitchItem(
-                icon = Icons.Filled.FolderDelete,
+                icon = Icons.Filled.RemoveModerator,
                 title = stringResource(id = R.string.settings_umount_modules_default),
                 summary = stringResource(id = R.string.settings_umount_modules_default_summary),
                 checked = umountChecked
             ) {
                 if (Natives.setDefaultUmountModules(it)) {
                     umountChecked = it
-                }
-            }
-
-            if (Natives.version >= Natives.MINIMAL_SUPPORTED_SU_COMPAT) {
-                var isSuDisabled by rememberSaveable {
-                    mutableStateOf(!Natives.isSuEnabled())
-                }
-                SwitchItem(
-                    icon = Icons.Filled.RemoveModerator,
-                    title = stringResource(id = R.string.settings_disable_su),
-                    summary = stringResource(id = R.string.settings_disable_su_summary),
-                    checked = isSuDisabled,
-                ) { checked ->
-                    val shouldEnable = !checked
-                    if (Natives.setSuEnabled(shouldEnable)) {
-                        isSuDisabled = !shouldEnable
-                    }
                 }
             }
 
@@ -217,6 +206,35 @@ fun SettingScreen(navigator: DestinationsNavigator) {
             ) {
                 prefs.edit().putBoolean("enable_web_debugging", it).apply()
                 enableWebDebugging = it
+            }
+
+            val suSFS = getSuSFS()
+            val isSUS_SU = getSuSFSFeatures()
+            if (suSFS == "Supported") {
+                if (isSUS_SU == "CONFIG_KSU_SUSFS_SUS_SU") {
+                    var isEnabled by rememberSaveable {
+                        mutableStateOf(susfsSUS_SU_Mode() == "2")
+                    }
+
+                    LaunchedEffect(Unit) {
+                        isEnabled = susfsSUS_SU_Mode() == "2"
+                    }
+
+                    SwitchItem(
+                        icon = Icons.Filled.VisibilityOff,
+                        title = stringResource(id = R.string.settings_susfs_toggle),
+                        summary = stringResource(id = R.string.settings_susfs_toggle_summary),
+                        checked = isEnabled
+                    ) {
+                        if (it) {
+                            susfsSUS_SU_2()
+                        } else {
+                            susfsSUS_SU_0()
+                        }
+                        prefs.edit().putBoolean("enable_sus_su", it).apply()
+                        isEnabled = it
+                    }
+                }
             }
 
             var showBottomsheet by remember { mutableStateOf(false) }

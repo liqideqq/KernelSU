@@ -22,9 +22,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -277,6 +279,14 @@ private fun StatusCard(
                             text = stringResource(R.string.home_module_count, getModuleCount()),
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        Spacer(Modifier.height(4.dp))
+                        val suSFS = getSuSFS()
+                        if (suSFS == "Supported") {
+                            Text(
+                                text = stringResource(R.string.home_susfs, getSuSFS()),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
 
@@ -405,7 +415,11 @@ private fun InfoCard() {
             val uname = Os.uname()
 
             @Composable
-            fun InfoCardItem(label: String, content: String) {
+            fun InfoCardItem(
+                label: String,
+                content: String,
+                icon: Painter = painterResource(R.drawable.ic_sus)
+            ) {
                 contents.appendLine(label).appendLine(content).appendLine()
                 Text(text = label, style = MaterialTheme.typography.bodyLarge)
                 Text(text = content, style = MaterialTheme.typography.bodyMedium)
@@ -419,6 +433,18 @@ private fun InfoCard() {
                 stringResource(R.string.home_manager_version),
                 "${managerVersion.first} (${managerVersion.second})"
             )
+
+            Spacer(Modifier.height(16.dp))
+            val isSUS_SU = getSuSFSFeatures() == "CONFIG_KSU_SUSFS_SUS_SU"
+            val suSFS = getSuSFS()
+            if (suSFS == "Supported") {
+                val susSUMode = if (isSUS_SU) "| SuS SU mode: ${susfsSUS_SU_Mode()}" else ""
+                InfoCardItem(
+                    label = stringResource(R.string.home_susfs_version),
+                    content = "${getSuSFSVersion()} (${getSuSFSVariant()}) $susSUMode",
+                    icon = painterResource(R.drawable.ic_sus),
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
             InfoCardItem(stringResource(R.string.home_fingerprint), Build.FINGERPRINT)

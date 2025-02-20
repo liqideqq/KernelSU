@@ -11,6 +11,9 @@
     <string name="home_unsupported">Unsupported</string>
     <string name="home_unsupported_reason">KernelSU only supports GKI kernels now</string>
     <string name="home_kernel">Kernel</string>
+    <string name="home_susfs">SuSFS: %s</string>
+    <string name="home_susfs_version">Version de SuSFS</string>
+    <string name="home_susfs_sus_su">SuS SU</string>
     <string name="home_manager_version">Manager version</string>
     <string name="home_fingerprint">Fingerprint</string>
     <string name="home_selinux_status">SELinux status</string>
@@ -72,6 +75,8 @@
     <string name="require_kernel_version">The current KernelSU version %d is too low for the manager to work properly. Please upgrade to version %d or higher!</string>
     <string name="settings_umount_modules_default">Umount modules by default</string>
     <string name="settings_umount_modules_default_summary">The global default value for \"Umount modules\" in App Profile. If enabled, it will remove all module modifications to the system for apps that don\'t have a profile set.</string>
+    <string name="settings_susfs_toggle">Cacher les hooks kprobe</string>
+    <string name="settings_susfs_toggle_summary">Désactive les hooks kprobe créés par KSU et, à la place, active les hooks non-kprobe intégrés, implémentant les mêmes fonctionnalités qui seraient appliquées à un kernel non-GKI, qui ne supportent krpobe.</string>
     <string name="profile_umount_modules_summary">Enabling this option will allow KernelSU to restore any modified files by the modules for this app.</string>
     <string name="profile_selinux_domain">Domain</string>
     <string name="profile_selinux_rules">Rules</string>
@@ -83,7 +88,6 @@
     <string name="force_stop_app">Force stop</string>
     <string name="restart_app">Restart</string>
     <string name="failed_to_update_sepolicy">Failed to update SELinux rules for %s</string>
-    <string name="su_not_allowed">Granting superuser to %s is not allowed</string>
     <string name="module_changelog">Changelog</string>
     <string name="settings_profile_template">App Profile Template</string>
     <string name="settings_profile_template_summary">Manage local and online template of App Profile</string>
@@ -134,6 +138,4 @@
     <string name="selected_lkm">Selected LKM: %s</string>
     <string name="save_log">Save logs</string>
     <string name="log_saved">Logs saved</string>
-    <string name="settings_disable_su">Disable su compatibility</string>
-    <string name="settings_disable_su_summary">Temporarily disable any applications from obtaining root privileges via the ⁠su command (existing root processes will not be affected).</string>
 </resources>
