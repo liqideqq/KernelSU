@@ -1,0 +1,12 @@
+#ifndef MANAGER_SIGN_H
+#define MANAGER_SIGN_H
+
+// rsuntk/KernelSU
+#define EXPECTED_SIZE_RSUNTK    0x35c
+#define EXPECTED_HASH_RSUNTK    "947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef"
+
+// 5ec1cff/KernelSU
+#define EXPECTED_SIZE_5EC1CFF   0x35c
+#define EXPECTED_HASH_5EC1CFF   "947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef"
+
+#endif /* MANAGER_SIGN_H */

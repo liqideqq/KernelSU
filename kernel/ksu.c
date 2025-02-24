@@ -11,6 +11,24 @@
 #include "ksu.h"
 #include "throne_tracker.h"
 
+#ifdef CONFIG_KSU_CMDLINE
+#include <linux/init.h>
+
+// use get_ksu_state()!
+unsigned int enable_kernelsu = 1; // enabled by default
+static int __init read_kernelsu_state(char *s)
+{
+	if (s)
+		enable_kernelsu = simple_strtoul(s, NULL, 0);
+	return 1;
+}
+__setup("kernelsu.enabled=", read_kernelsu_state);
+
+bool get_ksu_state(void) { return enable_kernelsu >= 1; }
+#else
+bool get_ksu_state(void) { return true; }
+#endif /* CONFIG_KSU_CMDLINE */
+
 static struct workqueue_struct *ksu_workqueue;
 
 bool ksu_queue_work(struct work_struct *work)
@@ -39,6 +57,15 @@ extern void ksu_ksud_exit();
 
 int __init kernelsu_init(void)
 {
+	pr_info("kernelsu.enabled=%d\n",
+		get_ksu_state());
+
+#ifdef CONFIG_KSU_CMDLINE
+	if (!get_ksu_state()) {
+		pr_info_once("drivers is disabled.");
+		return 0;
+	}
+#endif
 #ifdef CONFIG_KSU_DEBUG
 	pr_alert("*************************************************************");
 	pr_alert("**     NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE    **");
@@ -57,8 +84,12 @@ int __init kernelsu_init(void)
 
 	ksu_throne_tracker_init();
 
+#ifdef KSU_HOOK_WITH_KPROBES
 	ksu_sucompat_init();
 	ksu_ksud_init();
+#else
+	pr_debug("init ksu driver\n");
+#endif
 
 #ifdef MODULE
 #ifndef CONFIG_KSU_DEBUG
@@ -70,14 +101,21 @@ int __init kernelsu_init(void)
 
 void kernelsu_exit(void)
 {
+#ifdef CONFIG_KSU_CMDLINE
+	if (!get_ksu_state()) {
+		return;
+	}
+#endif
 	ksu_allowlist_exit();
 
 	ksu_throne_tracker_exit();
 
 	destroy_workqueue(ksu_workqueue);
 
+#ifdef KSU_HOOK_WITH_KPROBES
 	ksu_ksud_exit();
 	ksu_sucompat_exit();
+#endif
 
 	ksu_core_exit();
 }
@@ -88,4 +126,8 @@ module_exit(kernelsu_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("weishu");
 MODULE_DESCRIPTION("Android KernelSU");
+
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
 MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);
+#endif

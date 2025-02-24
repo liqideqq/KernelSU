@@ -20,9 +20,28 @@
 #endif
 #endif
 
+// KPROBE checks (hopefully it didn't break gki/lkm)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0) &&	\
+	defined(KSU_COMPAT_KPROBES)
+#define KSU_HOOK_WITH_KPROBES
+#endif
+
+// Checks for UH, KDP and RKP
+#ifdef SAMSUNG_UH_DRIVER_EXIST
+#if defined(CONFIG_UH) || defined(CONFIG_KDP) || defined(CONFIG_RKP)
+#error "CONFIG_UH, CONFIG_KDP and CONFIG_RKP is enabled! Please disable or remove it before compile a kernel with KernelSU!"
+#endif
+#endif
+
 extern long ksu_strncpy_from_user_nofault(char *dst,
 					  const void __user *unsafe_addr,
 					  long count);
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0) ||	\
+	defined(CONFIG_IS_HW_HISI) ||	\
+	defined(CONFIG_KSU_ALLOWLIST_WORKAROUND)
+extern struct key *init_session_keyring;
+#endif
 
 extern void ksu_android_ns_fs_check();
 extern struct file *ksu_filp_open_compat(const char *filename, int flags,

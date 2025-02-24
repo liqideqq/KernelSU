@@ -14,6 +14,24 @@ kernelsu-objs += selinux/rules.o
 ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
 ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-generic/errno.h
 
+# Do checks before compile
+ifneq ($(shell grep -q "int path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
+$(error -- Backporting path_umount is mandatory !! Read: https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#how-to-backport-path-umount)
+endif
+
+# GKI manual hook checks
+# https://github.com/Pzqqt/android_kernel_xiaomi_marble/commit/5b8596b5604bcd0e6e12697a01136a0bb9eb0257
+ifeq ($(CONFIG_KSU_MANUAL_HOOK),y)
+ifeq ($(CONFIG_KSU),m)
+$(error CONFIG_KSU_MANUAL_HOOK cannot be enabled when compiling KernelSU as LKM!)
+endif
+else
+# This is useless for non-GKI, only used for checks
+ifeq ($(CONFIG_KPROBES),y)
+ccflags-y += -DKSU_COMPAT_KPROBES
+endif
+endif
+
 obj-$(CONFIG_KSU) += kernelsu.o
 
 # .git is a text file while the module is imported by 'git submodule add'.
@@ -27,6 +45,43 @@ ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 else # If there is no .git file, the default version will be passed.
 $(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git submodule!")
 ccflags-y += -DKSU_VERSION=16
+endif
+
+# SELinux drivers check
+ifeq ($(shell grep -q " current_sid(void)" $(srctree)/security/selinux/include/objsec.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_HAS_CURRENT_SID
+endif
+ifeq ($(shell grep -q "struct selinux_state " $(srctree)/security/selinux/include/security.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_HAS_SELINUX_STATE
+endif
+
+# This feature was introduced in linux 5.0-rc1
+ifeq ($(shell grep -q "get_cred_rcu" $(srctree)/include/linux/cred.h; echo $$?),0)
+ccflags-y += -DKSU_COMPAT_GET_CRED_RCU
+else
+# https://github.com/gregkh/linux/commit/123e44b9a49a42ff5313ec65256f1540d7c52fa0
+ifeq ($(shell grep -q "atomic_long_inc" $(srctree)/include/linux/cred.h; echo $$?),0)
+$(info -- KernelSU compat: atomic_long_t detected.)
+ccflags-y += -DKSU_COMPAT_ATOMIC_LONG
+else
+$(info -- KernelSU compat: atomic_t detected.)
+endif
+endif
+
+# Handle optional backports
+ifeq ($(shell grep -q "strncpy_from_user_nofault" $(srctree)/include/linux/uaccess.h; echo $$?),0)
+ccflags-y += -DKSU_OPTIONAL_STRNCPY
+endif
+ifeq ($(shell grep -q "ssize_t kernel_read" $(srctree)/fs/read_write.c; echo $$?),0)
+ccflags-y += -DKSU_OPTIONAL_KERNEL_READ
+endif
+ifeq ($(shell grep "ssize_t kernel_write" $(srctree)/fs/read_write.c | grep -q "const void" ; echo $$?),0)
+ccflags-y += -DKSU_OPTIONAL_KERNEL_WRITE
+endif
+
+# Checks Samsung UH drivers
+ifeq ($(shell grep -q "CONFIG_KDP_CRED" $(srctree)/kernel/cred.c; echo $$?),0)
+ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
 ifndef KSU_EXPECTED_SIZE
@@ -44,6 +99,7 @@ endif
 
 $(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
+$(info -- Supported Unofficial Manager: rsuntk (Non-GKI), 5ec1cff (GKI)) 
 
 ccflags-y += -DEXPECTED_SIZE=$(KSU_EXPECTED_SIZE)
 ccflags-y += -DEXPECTED_HASH=\"$(KSU_EXPECTED_HASH)\"
