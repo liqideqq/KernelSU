@@ -314,7 +314,18 @@ module_param_cb(ksu_debug_manager_uid, &expected_size_ops,
 
 #endif
 
-bool is_manager_apk(char *path)
+// include custom manager header
+#include "manager.h"
+
+bool ksu_is_manager_apk(char *path)
 {
-	return check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH);
+	return (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH) ||
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
+		check_v2_signature(path, EXPECTED_SIZE_5EC1CFF, EXPECTED_HASH_5EC1CFF) ||
+		check_v2_signature(path, EXPECTED_SIZE_WEISHU, EXPECTED_HASH_WEISHU) ||
+		check_v2_signature(path, EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO) ||
+#endif
+		check_v2_signature(path, EXPECTED_SIZE_RSUNTK, EXPECTED_HASH_RSUNTK) ||
+		check_v2_signature(path, EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO) ||
+		check_v2_signature(path, EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO));
 }
