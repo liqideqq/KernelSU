@@ -315,7 +315,7 @@ module_param_cb(ksu_debug_manager_uid, &expected_size_ops,
 #endif
 
 // include custom manager header
-#include "manager_sign.h"
+#include "manager.h"
 
 bool ksu_is_manager_apk(char *path)
 {
