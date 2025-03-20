@@ -44,14 +44,14 @@ endif
 
 obj-$(CONFIG_KSU) += kernelsu.o
 
-KSU_MANUAL_VERSION := 12512
+KSU_MANUAL_VERSION := 12108
 
 ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
         $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
         KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count HEAD)
-        # ksu_version: major * 10000 + git version + 500 for historical reasons
-        $(eval KSU_VERSION=$(shell expr 12000 + $(KSU_GIT_VERSION) + 500))
+        # ksu_version: major * 10000 + git version + 200 for historical reasons
+        $(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 200))
         $(info -- KernelSU version (Git-based): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     else
@@ -141,4 +141,3 @@ $(info -- You have not integrate susfs in your kernel.)
 $(info -- Read: https://gitlab.com/simonpunk/susfs4ksu)
 endif
 # Keep a new line here!! Because someone may append config
-
