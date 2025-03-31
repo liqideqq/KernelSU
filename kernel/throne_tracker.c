@@ -149,11 +149,11 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
 		return FILLDIR_ACTOR_CONTINUE; // Skip "." and ".."
 
 	if (d_type == DT_DIR && namelen >= 8 && !strncmp(name, "vmdl", 4) &&
-	    !strncmp(name + namelen - 4, ".tmp", 4)) {
-		pr_info("Skipping directory: %.*s\n", namelen, name);
-		return FILLDIR_ACTOR_CONTINUE; // Skip staging package
-	}
-
+ 	    !strncmp(name + namelen - 4, ".tmp", 4)) {
+ 		pr_info("Skipping directory: %.*s\n", namelen, name);
+ 		return FILLDIR_ACTOR_CONTINUE; // Skip staging package
+ 	}
+	
 	if (snprintf(dirpath, DATA_PATH_LEN, "%s/%.*s", my_ctx->parent_dir,
 		     namelen, name) >= DATA_PATH_LEN) {
 		pr_err("Path too long: %s/%.*s\n", my_ctx->parent_dir, namelen,
@@ -176,7 +176,11 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
 	} else {
 		if ((namelen == 8) && (strncmp(name, "base.apk", namelen) == 0)) {
 			struct apk_path_hash *pos, *n;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0)
+			unsigned int hash = full_name_hash(dirpath, strlen(dirpath));
+#else
 			unsigned int hash = full_name_hash(NULL, dirpath, strlen(dirpath));
+#endif
 			list_for_each_entry(pos, &apk_path_hash_list, list) {
 				if (hash == pos->hash) {
 					pos->exists = true;
@@ -184,7 +188,7 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
 				}
 			}
 
-			bool is_manager = is_manager_apk(dirpath);
+			bool is_manager = ksu_is_manager_apk(dirpath);
 			pr_info("Found new base.apk at path: %s, is_manager: %d\n",
 				dirpath, is_manager);
 			if (is_manager) {
@@ -226,7 +230,7 @@ void search_manager(const char *path, int depth, struct list_head *uid_data)
 	data.depth = depth;
 	list_add_tail(&data.list, &data_path_list);
 
-	for (i = depth; i >= 0; i--) {
+	for (i = depth; i > 0; i--) {
 		struct data_path *pos, *n;
 
 		list_for_each_entry_safe(pos, n, &data_path_list, list) {
@@ -280,7 +284,7 @@ static bool is_uid_exist(uid_t uid, char *package, void *data)
 	return exist;
 }
 
-void track_throne()
+void ksu_track_throne()
 {
 	struct file *fp =
 		ksu_filp_open_compat(SYSTEM_PACKAGES_LIST_PATH, O_RDONLY, 0);
