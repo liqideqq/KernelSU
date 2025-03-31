@@ -50,14 +50,14 @@ ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
         $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
         KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count HEAD)
-        # ksu_version: major * 10000 + git version + 200 for historical reasons
+        # ksu_version: major * 10000 + git version + 500 for historical reasons
         $(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 200))
         $(info -- KernelSU version (Git-based): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     else
         # .git is a text file while the module is imported by 'git submodule add'.
         $(warning "KSU_GIT_VERSION not defined! Using default version.")
-        KSU_VERSION := 12512
+        KSU_VERSION := 12558
         $(info -- KernelSU version (Default): $(KSU_VERSION))
         ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
     endif
@@ -106,7 +106,7 @@ ccflags-y += -DSAMSUNG_UH_DRIVER_EXIST
 endif
 
 ifndef KSU_EXPECTED_SIZE
-KSU_EXPECTED_SIZE := 384
+KSU_EXPECTED_SIZE := 0x35c
 endif
 
 ifndef KSU_EXPECTED_HASH
@@ -120,7 +120,7 @@ endif
 
 $(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
-$(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko (GKI and non-GKI)) 
+$(info -- Supported Unofficial Manager: 5ec1cff (GKI and non-GKI)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 $(info -- KERNEL_VERSION: $(KERNEL_VERSION))
 
@@ -140,3 +140,4 @@ $(info -- You have not integrate susfs in your kernel.)
 $(info -- Read: https://gitlab.com/simonpunk/susfs4ksu)
 endif
 # Keep a new line here!! Because someone may append config
+

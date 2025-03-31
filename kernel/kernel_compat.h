@@ -27,7 +27,7 @@ static inline const struct cred *get_cred_rcu(const struct cred *cred)
 	return cred;
 }
 #endif
- 
+
 /*
  * Adapt to Huawei HISI kernel without affecting other kernels ,
  * Huawei Hisi Kernel EBITMAP Enable or Disable Flag ,
