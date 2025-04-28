@@ -221,31 +221,6 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user, void 
     return 0;
 }
 
-int ksu_handle_devpts(struct inode *inode)
-{
-    if (!current->mm)
-        return 0;
-
-    uid_t uid = current_uid().val;
-
-    if ((uid % 100000) < 10000 || !ksu_is_allow_uid(uid))
-        return 0;
-
-    if (!ksu_devpts_sid)
-        return 0;
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0)
-    struct inode_security_struct *sec = selinux_inode(inode);
-#else
-    struct inode_security_struct *sec = (struct inode_security_struct *)inode->i_security;
-#endif
-
-    if (sec)
-        sec->sid = ksu_devpts_sid;
-
-    return 0;
-}
-
 #ifdef KSU_HOOK_WITH_KPROBES
 static int faccessat_handler_pre(struct kprobe *p, struct pt_regs *regs)
 {
