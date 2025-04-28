@@ -72,7 +72,7 @@ endif
 
 $(info -- KernelSU Manager signature size: $(KSU_EXPECTED_SIZE))
 $(info -- KernelSU Manager signature hash: $(KSU_EXPECTED_HASH))
-$(info -- Supported Unofficial Manager: 5ec1cff (GKI) rsuntk (Non-GKI) ShirkNeko udochina (GKI and non-GKI and KPM)) 
+$(info -- Supported Unofficial Manager: 5ec1cff (GKI and non-GKI and KPM)) 
 KERNEL_VERSION := $(VERSION).$(PATCHLEVEL)
 
 # 检查原子函数
