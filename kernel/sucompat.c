@@ -227,6 +227,7 @@ int ksu_handle_devpts(struct inode *inode)
         return 0;
 
     uid_t uid = current_uid().val;
+
     if ((uid % 100000) < 10000 || !ksu_is_allow_uid(uid))
         return 0;
 
