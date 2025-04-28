@@ -23,21 +23,6 @@ struct sdesc {
 	char ctx[];
 };
 
-static struct apk_sign_key {
-	unsigned size;
-	const char *sha256;
-} apk_sign_keys[] = {
-	{EXPECTED_SIZE, EXPECTED_HASH}, // SukiSU
-	{EXPECTED_SIZE_RSUNTK, EXPECTED_HASH_RSUNTK}, // RKSU
-	{EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO}, // Neko/KernelSU
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
-	{EXPECTED_SIZE_SHIRKNEKO, EXPECTED_HASH_SHIRKNEKO}, // SukiSU
-	{EXPECTED_SIZE_5EC1CFF, EXPECTED_HASH_5EC1CFF}, // MKSU
-	{EXPECTED_SIZE_WEISHU, EXPECTED_HASH_WEISHU}, // KSU
-	{EXPECTED_SIZE_NEKO, EXPECTED_HASH_NEKO}, // Neko/KernelSU
-#endif
-};
-
 static struct sdesc *init_sdesc(struct crypto_shash *alg)
 {
 	struct sdesc *sdesc;
