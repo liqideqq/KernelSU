@@ -70,11 +70,9 @@ static int ksu_sha256(const unsigned char *data, unsigned int datalen,
 	return ret;
 }
 
-static bool check_block(struct file *fp, u32 *size4, loff_t *pos, u32 *offset)
+static bool check_block(struct file *fp, u32 *size4, loff_t *pos, u32 *offset,
+			unsigned expected_size, const char *expected_sha256)
 {
-	int i;
-	struct apk_sign_key sign_key;
-
 	ksu_kernel_read_compat(fp, size4, 0x4, pos); // signer-sequence length
 	ksu_kernel_read_compat(fp, size4, 0x4, pos); // signer length
 	ksu_kernel_read_compat(fp, size4, 0x4, pos); // signed data length
@@ -90,11 +88,7 @@ static bool check_block(struct file *fp, u32 *size4, loff_t *pos, u32 *offset)
 	ksu_kernel_read_compat(fp, size4, 0x4, pos); // certificate length
 	*offset += 0x4 * 2;
 
-	for (i = 0; i < ARRAY_SIZE(apk_sign_keys); i++) {
-		sign_key = apk_sign_keys[i];
-
-		if (*size4 != sign_key.size)
-			continue;
+	if (*size4 == expected_size) {
 		*offset += *size4;
 
 #define CERT_MAX_LENGTH 1024
