@@ -18,6 +18,7 @@
 #include "klog.h" // IWYU pragma: keep
 #include "kernel_compat.h"
 
+
 struct sdesc {
 	struct shash_desc shash;
 	char ctx[];
@@ -109,8 +110,8 @@ static bool check_block(struct file *fp, u32 *size4, loff_t *pos, u32 *offset,
 
 		bin2hex(hash_str, digest, SHA256_DIGEST_SIZE);
 		pr_info("sha256: %s, expected: %s\n", hash_str,
-			sign_key.sha256);
-		if (strcmp(sign_key.sha256, hash_str) == 0) {
+			expected_sha256);
+		if (strcmp(expected_sha256, hash_str) == 0) {
 			return true;
 		}
 	}
@@ -170,7 +171,9 @@ static bool has_v1_signature_file(struct file *fp)
 	return false;
 }
 
-static __always_inline bool check_v2_signature(char *path)
+static __always_inline bool check_v2_signature(char *path,
+					       unsigned expected_size,
+					       const char *expected_sha256)
 {
 	unsigned char buffer[0x11] = { 0 };
 	u32 size4;
@@ -241,7 +244,9 @@ static __always_inline bool check_v2_signature(char *path)
 		offset = 4;
 		if (id == 0x7109871au) {
 			v2_signing_blocks++;
-			v2_signing_valid = check_block(fp, &size4, &pos, &offset);
+			v2_signing_valid =
+				check_block(fp, &size4, &pos, &offset,
+					    expected_size, expected_sha256);
 		} else if (id == 0xf05368c0u) {
 			// http://aospxref.com/android-14.0.0_r2/xref/frameworks/base/core/java/android/util/apk/ApkSignatureSchemeV3Verifier.java#73
 			v3_signing_exist = true;
@@ -308,7 +313,6 @@ module_param_cb(ksu_debug_manager_uid, &expected_size_ops,
 		&ksu_debug_manager_uid, S_IRUSR | S_IWUSR);
 
 #endif
-
 
 bool ksu_is_manager_apk(char *path)
 {
