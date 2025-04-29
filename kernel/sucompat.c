@@ -221,6 +221,11 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user, void 
     return 0;
 }
 
+int ksu_handle_devpts(struct inode *inode)
+{
+    return 0;
+}
+
 #ifdef KSU_HOOK_WITH_KPROBES
 static int faccessat_handler_pre(struct kprobe *p, struct pt_regs *regs)
 {
