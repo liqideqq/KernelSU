@@ -44,17 +44,27 @@ ccflags-y += -DKSU_HOOK_WITH_KPROBES
 endif
 endif
 
-# .git is a text file while the module is imported by 'git submodule add'.
-ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
-$(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
-KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count main)
-# ksu_version: major * 10000 + git version + 606 for historical reasons
-$(eval KSU_VERSION=$(shell expr 10000 + $(KSU_GIT_VERSION) + 606))
-$(info -- KernelSU version: $(KSU_VERSION))
-ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
-else # If there is no .git file, the default version will be passed.
-$(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git submodule!")
-ccflags-y += -DKSU_VERSION=12115
+KSU_MANUAL_VERSION := 12115
+
+ifeq ($(strip $(KSU_MANUAL_VERSION)),)
+    ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
+        $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin [ -f ../.git/shallow ] && git fetch --unshallow)
+        KSU_GIT_VERSION := $(shell cd $(srctree)/$(src); /usr/bin/env PATH="$$PATH":/usr/bin:/usr/local/bin git rev-list --count HEAD)
+        # ksu_version: major * 10000 + git version + 500 for historical reasons
+        $(eval KSU_VERSION=$(shell expr 12000 + $(KSU_GIT_VERSION) + 500))
+        $(info -- KernelSU version (Git-based): $(KSU_VERSION))
+        ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
+    else
+        # .git is a text file while the module is imported by 'git submodule add'.
+        $(warning "KSU_GIT_VERSION not defined! Using default version.")
+        KSU_VERSION := 12115
+        $(info -- KernelSU version (Default): $(KSU_VERSION))
+        ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
+    endif
+else
+    KSU_VERSION := $(KSU_MANUAL_VERSION)
+    $(info -- KernelSU version (Manual): $(KSU_VERSION))
+    ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 endif
 
 ifndef KSU_EXPECTED_SIZE
