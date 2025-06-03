@@ -223,7 +223,36 @@ int ksu_handle_execve_sucompat(int *fd, const char __user **filename_user, void 
 
 int ksu_handle_devpts(struct inode *inode)
 {
-    return 0;
+#ifndef KSU_HOOK_WITH_KPROBES
+	if (!ksu_devpts_hook) {
+		return 0;
+	}
+#endif
+
+	if (!current->mm) {
+		return 0;
+	}
+
+    uid_t uid = current_uid().val;
+    if (uid % 100000 < 10000) {
+        return 0;
+    }
+
+	if (!ksu_is_allow_uid(uid))
+		return 0;
+
+	if (ksu_devpts_sid) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 1, 0)
+		struct inode_security_struct *sec = selinux_inode(inode);
+#else
+        struct inode_security_struct *sec = (struct inode_security_struct *)inode->i_security;
+#endif
+		if (sec) {
+			sec->sid = ksu_devpts_sid;
+		}
+	}
+
+	return 0;
 }
 
 #ifdef KSU_HOOK_WITH_KPROBES
@@ -309,6 +338,19 @@ static struct kprobe execve_kp = {
 };
 #endif
 
+static int pts_unix98_lookup_pre(struct kprobe *p, struct pt_regs *regs)
+{
+	struct inode *inode;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+	struct file *file = (struct file *)PT_REGS_PARM2(regs);
+	inode = file->f_path.dentry->d_inode;
+#else
+	inode = (struct inode *)PT_REGS_PARM2(regs);
+#endif
+
+	return ksu_handle_devpts(inode);
+}
+
 static struct kprobe pts_unix98_lookup_kp = { .symbol_name =
 	"pts_unix98_lookup",
 .pre_handler =
@@ -344,7 +386,7 @@ static void destroy_kprobe(struct kprobe **kp_ptr)
 	*kp_ptr = NULL;
 }
 
-static struct kprobe *su_kps[3];
+static struct kprobe *su_kps[4];
 #endif
 
 // sucompat: permited process can execute 'su' to gain root access.
@@ -354,6 +396,7 @@ void ksu_sucompat_init()
 	su_kps[0] = init_kprobe(SYS_EXECVE_SYMBOL, execve_handler_pre);
 	su_kps[1] = init_kprobe(SYS_FACCESSAT_SYMBOL, faccessat_handler_pre);
 	su_kps[2] = init_kprobe(SYS_NEWFSTATAT_SYMBOL, newfstatat_handler_pre);
+	su_kps[3] = init_kprobe("pts_unix98_lookup", pts_unix98_lookup_pre);
 #else
 	ksu_faccessat_hook = true;
 	ksu_stat_hook = true;
