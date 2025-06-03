@@ -231,9 +231,9 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
 void search_manager(const char *path, int depth, struct list_head *uid_data)
 {
 	int i, stop = 0, err;
+	struct list_head data_path_list;
 	struct path kpath;
 	struct super_block* root_sb;
-	struct list_head data_path_list;
 	INIT_LIST_HEAD(&data_path_list);
 
 	err = kern_path(path, 0, &kpath);
