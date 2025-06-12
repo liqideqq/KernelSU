@@ -210,16 +210,15 @@ void ksu_escape_to_root(void)
 	struct cred *cred;
 
 #ifdef KSU_GET_CRED_RCU
-	rcu_read_lock();
-
-	do {
-		cred = (struct cred *)__task_cred((current));
-		BUG_ON(!cred);
-	} while (!get_cred_rcu(cred));
+	cred = prepare_creds();
+	if (!cred) {
+		pr_warn("prepare_creds failed!\n");
+		return;
+	}
 
 	if (cred->euid.val == 0) {
 		pr_warn("Already root, don't escape!\n");
-		rcu_read_unlock();
+		abort_creds(cred);
 		return;
 	}
 #else
@@ -266,7 +265,7 @@ void ksu_escape_to_root(void)
 	setup_groups(profile, cred);
 	
 #ifdef KSU_GET_CRED_RCU
-	rcu_read_unlock();
+	commit_creds(cred);
 #endif
 
 	// Refer to kernel/seccomp.c: seccomp_set_mode_strict
@@ -334,7 +333,7 @@ static void nuke_ext4_sysfs() {
 	}
 
 	ext4_unregister_sysfs(sb);
- 	path_put(&path);
+	path_put(&path);
 }
 
 int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
