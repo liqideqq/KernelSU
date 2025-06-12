@@ -4,7 +4,7 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/types.h>
-#include <linux/namei.h>
+#include <linux/version.h>
 
 #include "allowlist.h"
 #include "klog.h" // IWYU pragma: keep
