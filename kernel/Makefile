@@ -44,7 +44,7 @@ ccflags-y += -DKSU_HOOK_WITH_KPROBES
 endif
 endif
 
-KSU_MANUAL_VERSION := 12137
+KSU_MANUAL_VERSION := 12141
 
 ifeq ($(strip $(KSU_MANUAL_VERSION)),)
     ifeq ($(shell test -e $(srctree)/$(src)/../.git; echo $$?),0)
